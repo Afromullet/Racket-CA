@@ -1,3 +1,6 @@
+(require racket/include)
+ (require racket/stream)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                Utility Functions                                                 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -107,10 +110,56 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                               Rule Application Functions                                         ;                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;Applies the rules to an input row
+(define ((row-apply-rules neighs-size ruleset) input-row)
+  (map-ruleset (get-all-neighs input-row neighs-size) ruleset))
+
+
+                                         
+;Creates a stream from an input-row.
+;Here's an example of how to access the stream elements
+;(define ca-stream
+;  (create-ca-row-stream neigh-size Rule-30 test-row))
+;(stream-first ca-stream)
+;(stream-first (stream-rest ca-stream))
+;(stream-first (stream-rest (stream-rest ca-stream)))
+(define (create-ca-row-stream neighborhood-size ruleset input-row)
+   (unfold (row-apply-rules neighborhood-size ruleset) input-row))
+
+;Applies the rules to an input matrix and returns a stream, where element n of the list or row n-1
+(define ((create-ca-matrix-stream neigh-size ruleset) matrix)
+  (cond
+    [(empty? matrix) empty]
+    [else
+     (cons
+      (unfold (row-apply-rules neigh-size ruleset) (first matrix))
+      ((create-ca-matrix-stream neigh-size ruleset) (rest matrix))
+      )]))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                               Functions for getting rows from streams                                         Y;                
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (get-first-matrix matrix-stream)
+  (map stream-first matrix-stream))
+
+(define (get-next-matrix matrix-stream)
+  (map stream-rest matrix-stream))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;                                Pre-existing rulesets                                                         ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define Rule-30(list
                 (Rule '(1 1 1) 0) (Rule '(1 1 0) 0) (Rule '(1 0 1) 0) (Rule '(1 0 0) 1)
                 (Rule '(0 1 1) 1) (Rule '(0 1 0) 1) (Rule '(0 0 1) 1) (Rule '(0 0 0) 0)))
+
+
+(define Rule-90(list
+                (Rule '(1 1 1) 0) (Rule '(1 1 0) 1) (Rule '(1 0 1) 0) (Rule '(1 0 0) 1)
+                (Rule '(0 1 1) 1) (Rule '(0 1 0) 0) (Rule '(0 0 1) 1) (Rule '(0 0 0) 0)))
 
